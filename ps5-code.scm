@@ -231,7 +231,7 @@
 ;;; Install the polynomial methods in the generic operations.
 
 (put 'add '(polynomial polynomial) +polynomial)
-(put 'sub '(Polynomial Polynomial) -polynomial)
+(put 'sub '(polynomial polynomial) -polynomial)
 (put 'mul '(polynomial polynomial) *polynomial)
 
 (put '=zero? '(polynomial) =zero-polynomial?)
@@ -287,7 +287,7 @@
 
 ;;;    (RepPoly, RepPoly) --> Bool
 (define (equ-poly? p1 p2)
-  (and (same-variable? p1 p2)
+  (and (same-variable? (variable p1) (variable p2))
        (=zero-poly? (-poly p1 p2))))
 
 ;;; Need -poly ****
@@ -438,21 +438,45 @@
       (create-number 1)
       (mul gn (power gn (dec k)))))
 
+(define (apply-terms terms gn)
+  (if (empty-termlist? terms)
+      (create-number 0)
+      (add (apply-term (first-term terms) gn)
+           (apply-terms (rest-terms terms) gn))))
+
 (define (apply-polynomial p gn)
   (apply-terms
    (term-list (contents p))
    gn))
 
+;;;    (Variable, RepNum) --> RepPoly
+(define (repnum->reppoly var n)
+  (make-poly var (list (make-term 0 (create-number n)))))
 
+;;;  ((RepPoly,RepPoly) --> T) --> ((RepNum,RepPoly) --> T)
+(define (PPmethod->NPmethod method)
+  (lambda (num poly)
+    (method
+     (repnum->reppoly (variable poly) num)
+     poly)))
 
+;;;  ((RepPoly,RepPoly) --> T) --> ((RepPoly,RepNum) --> T)
+(define (PPmethod->PNmethod method)
+  (lambda (poly num)
+    (method
+     poly
+     (repnum->reppoly (variable poly) num))))
 
-
-
-
-
-
-
-
-
-
+;;;  install add, sub, mul, equ? at argument types
+;;;  (number polynomial) and (polynomial number)
+(put 'add '(number polynomial) (PPmethod->NPmethod +polynomial))
+(put 'add '(polynomial number) (PPmethod->PNmethod +polynomial))
+(put 'sub '(number polynomial) (PPmethod->NPmethod -polynomial))
+(put 'sub '(polynomial number) (PPmethod->PNmethod -polynomial))
+(put 'mul '(number polynomial) (PPmethod->NPmethod *polynomial))
+(put 'mul '(polynomial number) (PPmethod->PNmethod *polynomial))
+;(put 'div '(number polynomial) (PPmethod->NPmethod /polynomial))
+;(put 'div '(polynomial number) (PPmethod->PNmethod /polynomial))
+(put 'equ? '(number polynomial) (PPmethod->NPmethod equ-polynomial?))
+(put 'equ? '(polynomial number) (PPmethod->PNmethod equ-polynomial?))
 

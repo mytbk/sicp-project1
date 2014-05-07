@@ -2,6 +2,8 @@
 (load "types.scm")
 (load "ps5-code.scm")
 (define (inc x) (+ x 1))
+(define (dec x) (- x 1))
+
 ;;; test equ? on numbers
 (define n1 (create-number 2))
 (define n2 (create-number 2))
@@ -67,6 +69,14 @@
 (newline)
 
 ;;; mixed-type polynomial
+(define p2-mixed
+  (create-polynomial
+   'z
+   (list
+    p1
+    (create-number 3)
+    (create-number 5))))
+
 (define p2
   (create-polynomial
    'z
@@ -113,4 +123,22 @@
 (newline)
 (display (equ? p2 p3))  ;#f
 (newline)
+
+;;; coerce number to poly
+(print-polynomial (square p2-mixed))  ;(x^6+10*x^5+25*x^4−4*x^3−20*x^2+4)*z^4+
+                                      ;(6*x^3+30*x^2−12)*z^3+(10*x^3+50*x^2−11)*z^2+30*z+25
+(newline)
+(display (equ? (sub (add p1 p3) p1) p3))  ;#t
+(newline)
+
+;;; apply-polinomial
+(display (apply-polynomial p1 (create-number 2)))  ; 26
+(newline)
+(define x+1 (create-polynomial 'x
+                               (list
+                                (create-number 1)
+                                (create-number 1))))
+(print-polynomial (apply-polynomial p2 x+1))
+(newline)
+
 
