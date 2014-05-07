@@ -206,6 +206,8 @@
 (define (+polynomial p1 p2)
   (make-polynomial (+poly p1 p2)))
 
+(define (-polynomial p1 p2)
+  (make-polynomial (-poly p1 p2)))
 
 (define (*polynomial p1 p2)
   (make-polynomial (*poly p1 p2)))
@@ -217,6 +219,9 @@
 ;;;   RepPoly --> Bool
 (define (=zero-polynomial? p) (=zero-poly? p))
 
+;;;   (RepPoly, RepPoly) --> Bool
+(define (equ-polynomial? p1 p2)
+  (equ-poly? p1 p2))
 
 ;;;   RepPoly --> ({polynomial} X RepPoly)
 (define (make-polynomial poly)
@@ -226,10 +231,13 @@
 ;;; Install the polynomial methods in the generic operations.
 
 (put 'add '(polynomial polynomial) +polynomial)
+(put 'sub '(Polynomial Polynomial) -polynomial)
 (put 'mul '(polynomial polynomial) *polynomial)
 
 (put '=zero? '(polynomial) =zero-polynomial?)
-
+(put 'negate '(polynomial) negate-polynomial)
+(put 'equ? '(polynomial polynomial) equ-polynomial?)
+
 ;;; Polynomial Package User Interface
 
 ;;; A convenient procedure for building a generic polynomial
@@ -273,6 +281,14 @@
 			 (term-list p2)))
       (error "Polys not in same var -- +POLY"
 	     (list p1 p2))))
+
+(define (-poly p1 p2)
+  (+poly p1 (negate-poly p2)))
+
+;;;    (RepPoly, RepPoly) --> Bool
+(define (equ-poly? p1 p2)
+  (and (same-variable? p1 p2)
+       (=zero-poly? (-poly p1 p2))))
 
 ;;; Need -poly ****
 
@@ -347,6 +363,22 @@
       (the-empty-termlist)
       (adjoin-term (mapf (first-term L))
                    (map-terms mapf (rest-terms L)))))
+
+;;;   RepTerms --> RepTerms
+(define (negate-terms L)
+  (map-terms (lambda (term)
+               (make-term (order term)
+                          (negate (coeff term))))
+             L))
+
+;;;   RepPoly --> RepPoly
+(define (negate-poly p)
+  (make-poly (variable p)
+             (negate-terms (term-list p))))
+
+;;;   RepPoly --> ({polynomial} X RepPoly)
+(define (negate-polynomial p)
+  (make-polynomial (negate-poly p)))
 
 ;;; Procedures for Representing Term Lists.
 

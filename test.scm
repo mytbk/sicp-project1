@@ -103,3 +103,14 @@
 (newline)
 (print-polynomial (square p3))
 (newline)
+
+;;; sub and negate polynomials
+(display (equ? p1 p1))  ;#t
+(newline)
+(display (equ? p2 p2))  ;#t
+(newline)
+(display (equ? p3 p3))  ;#t
+(newline)
+(display (equ? p2 p3))  ;#f
+(newline)
+
