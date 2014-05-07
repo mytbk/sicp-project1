@@ -240,6 +240,10 @@
 (define (create-polynomial var coeffs)
   (make-polynomial (make-poly var (dense/coeffs->sparse/terms coeffs))))
 
+;;;    (Variable, List(Sch-Num)) --> ({polynomial} X RepPoly)
+(define (create-numerical-polynomial var coeffs)
+  (create-polynomial var
+                     (map make-number coeffs)))
 
 ;;; Makes sparse term representation out of a dense coefficient list
 ;;;     List(GN) --> Repterms
@@ -337,8 +341,13 @@
 (define (*-term-by-all-terms t1 L)
   (map-terms (lambda (term) (*term t1 term)) L))
 
+;;;   (RepTerm --> RepTerm) X RepTerms --> RepTerms
+(define (map-terms mapf L)
+  (if (empty-termlist? L)
+      (the-empty-termlist)
+      (adjoin-term (mapf (first-term L))
+                   (map-terms mapf (rest-terms L)))))
 
-
 ;;; Procedures for Representing Term Lists.
 
 ;;; RepTerms =  Empty-Term-List  U  (RepTerm X RepTerms)
