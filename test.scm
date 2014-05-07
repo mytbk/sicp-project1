@@ -36,10 +36,15 @@
 ;;; pretty-print a polynomial
 (define (print-polynomial poly)
   (define (print-term var term)
-    (begin (display (contents (coeff term)))
-           (display var)
-           (display "^")
-           (display (order term))))
+    (begin
+      (let ((coef (coeff term)))
+        (if (and (pair? coef) (eq? (type-tag coef) 'polynomial))
+            (begin (display "(") (print-polynomial coef) (display ")"))
+            (display (contents coef))))
+      (if (> (order term) 0)
+          (begin (display var)
+                 (display "^")
+                 (display (order term))))))
   (define (print-termlist var L)
     (if (null? L)
         'done
@@ -51,10 +56,50 @@
           (print-termlist var (rest-terms L)))))
   (let ((var (cadr poly))
         (L (cddr poly)))
-    (print-termlist var L))
-  (newline))
+    (print-termlist var L)))
+
 ;;; test multiplication of polynomial
 (print-polynomial p1)    ; x^3+5x^2-2
+(newline)
 (print-polynomial p1^2)  ; x^6+10*x^5+25*x^4−4*x^3−20*x^2+4
+(newline)
 (print-polynomial p1^4)  ; x^12+20*x^11+150*x^10+492*x^9+505*x^8−600*x^7−976*x^6+240*x^5+600*x^4−32*x^3−160*x^2+16
+(newline)
 
+;;; mixed-type polynomial
+(define p2
+  (create-polynomial
+   'z
+   (list
+    p1
+    (create-polynomial 'x (list (create-number 3)))
+    (create-polynomial 'x (list (create-number 5))))))
+
+(define pr1 (create-rational
+             (create-polynomial 'y (list (create-number 3)))
+             (create-polynomial 'y (list (create-number 1)
+                                         (create-number 0)))))
+(define pr2 (create-rational
+             (create-polynomial 'y (list (create-number 2)
+                                         (create-number 0)
+                                         (create-number 1)))
+             (create-polynomial 'y (list (create-number 1)
+                                         (create-number 0)))))
+(define pr3 (create-rational
+             (create-polynomial 'y (list (create-number 1)))
+             (create-polynomial 'y (list (create-number 1)
+                                         (create-number -1)))))
+(define pr4 (create-rational
+             (create-polynomial 'y (list (create-number 2)))
+             (create-polynomial 'y (list (create-number 1)))))
+(define p3
+  (create-polynomial 'x
+                     (list pr1 (create-polynomial 'y '()) pr2 pr3 pr4)))
+
+;;; square p2 and p3
+(print-polynomial p2)
+(newline)
+(print-polynomial (square p2))
+(newline)
+(print-polynomial (square p3))
+(newline)
