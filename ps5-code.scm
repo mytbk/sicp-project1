@@ -19,6 +19,8 @@
 ;;;   GN --> Bool
 (define (=zero? x) (apply-generic '=zero? x))
 
+;;;   (GN, GN) --> Bool
+(define (equ? x y) (apply-generic 'equ? x y))
 
 ;;; a sample compound generic operation
 ;;;   GN --> GN
@@ -47,6 +49,8 @@
 ;;;   RepNum --> ({number} X RepNum)
 (define (make-number x) (attach-tag 'number x))
 
+;;;   (RepNum, RepNum) --> Sch-Bool
+(define (=number? x y) (= x y))
 
 ;;; Install the number methods in the generic operations.
 
@@ -58,7 +62,7 @@
 (put 'negate '(number) negate-number)
 
 (put '=zero? '(number) =zero-number?)
-
+(put 'equ? '(number number) =number?)
 
 ;;; Number Package User Interface
 
@@ -86,6 +90,11 @@
 ;;;   RepRat --> Bool
 (define (=zero-rational? x) (=zero-rat? x))
 
+;;;   (RepRat, RepRat) --> Bool
+(define (equ-rat? x y)
+  (equ? (mul (numer x) (denom y))
+        (mul (numer y) (denom x))))
+
 ;;;   RepRat --> ({rational} X RepRat)
 (define (make-rational x) (attach-tag 'rational x))
 
@@ -99,7 +108,7 @@
 
 (put 'negate '(rational) negate-rational)
 (put '=zero? '(rational) =zero-rational?)
-
+(put 'equ? '(rational rational) equ-rat?)
 
 ;;; Rational Package User Interface
 
@@ -147,7 +156,6 @@
 (define (=zero-rat? x)
   (=zero? (numer x)))
 
-
 ;;; Procedures for representing rationals
 
 ;;;   (GN, GN) --> RepRat
@@ -161,6 +169,9 @@
 ;;; Coercion procedure from rational/rational method
 ;;; to number/rational method
 
+;;;  RepNum --> RepRat
+(define (repnum->reprat num) (make-rat (make-number num) (make-number 1)))
+
 ;;;  ((RepRat,RepRat) --> T) --> ((RepNum,RepRat) --> T)
 (define (RRmethod->NRmethod method)
   (lambda (num rat)
@@ -168,7 +179,26 @@
      (repnum->reprat num)
      rat)))
 
-
+;;;  ((RepRat,RepRat) --> T) --> ((RepRat,RepNum) --> T)
+(define (RRmethod->RNmethod method)
+  (lambda (rat num)
+    (method
+     rat
+     (repnum->reprat num))))
+
+;;;  install add, sub, mul, div, equ? at argument types
+;;;  (number rational) and (rational number)
+(put 'add '(number rational) (RRmethod->NRmethod +rational))
+(put 'add '(rational number) (RRmethod->RNmethod +rational))
+(put 'sub '(number rational) (RRmethod->NRmethod -rational))
+(put 'sub '(rational number) (RRmethod->RNmethod -rational))
+(put 'mul '(number rational) (RRmethod->NRmethod *rational))
+(put 'mul '(rational number) (RRmethod->RNmethod *rational))
+(put 'div '(number rational) (RRmethod->NRmethod /rational))
+(put 'div '(rational number) (RRmethod->RNmethod /rational))
+(put 'equ? '(number rational) (RRmethod->NRmethod equ-rat?))
+(put 'equ? '(rational number) (RRmethod->RNmethod equ-rat?))
+
 ;;; THE GENERIC POLYNOMIAL PACKAGE
 ;;; Methods for polynomials
 
